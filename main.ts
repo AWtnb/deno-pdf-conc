@@ -1,4 +1,4 @@
-import * as path from "jsr:@std/path";
+import { join } from "jsr:@std/path";
 import { readAll } from "jsr:@std/io/read-all";
 import { existsSync } from "jsr:@std/fs";
 import { parseArgs } from "jsr:@std/cli/parse-args";
@@ -10,18 +10,16 @@ const concFiles = async (paths: string[], outname: string): Promise<number> => {
     }
     const outDoc = await PDFDocument.create();
 
-    const promises = paths.map(async (path) => {
+    for (const path of paths) {
         const data = await Deno.readFile(path);
         const srcDoc = await PDFDocument.load(data);
         const range = srcDoc.getPageIndices();
         const pages = await outDoc.copyPages(srcDoc, range);
         pages.forEach((page) => outDoc.addPage(page));
-    });
-
-    await Promise.all(promises);
+    }
 
     const bytes = await outDoc.save();
-    const outPath = path.join(Deno.cwd(), outname + ".pdf");
+    const outPath = join(Deno.cwd(), outname + ".pdf");
     await Deno.writeFile(outPath, bytes);
 
     return 0;
